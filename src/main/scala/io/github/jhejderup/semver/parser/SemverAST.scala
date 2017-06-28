@@ -181,6 +181,8 @@ case class CompareRange(op: SemverToken, partialRange: Semver) extends SemverAST
       CompareRange(GTE,Semver(NUMBER(major), NUMBER(minor), NUMBER(0), pre, build))
     case (GTE, Semver(NUMBER(major), LETTERX | STAR, _, pre, build)) =>
       CompareRange(GTE,Semver(NUMBER(major), NUMBER(0), NUMBER(0), pre, build))
+    case (_, Semver(LETTERX | STAR, _, _, _, _)) =>
+      CompareRange(GTE,Semver(NUMBER(0), NUMBER(0), NUMBER(0)))
     case (_,_) => this
   }
 

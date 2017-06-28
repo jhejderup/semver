@@ -81,7 +81,7 @@ object SemverLexer extends RegexParsers {
   }
 
   def tilde = positioned {
-    "~" ^^^ TILDE
+    """(?:~>?)""".r ^^^ TILDE
   }
 
   def caret = positioned {
