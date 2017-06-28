@@ -60,11 +60,11 @@ object SemverParser extends Parsers {
     case op ~ _ ~ partial => CompareRange(op, partial)
   }
 
-  def tilde: Parser[SemverAST] = TILDE ~ partial ^^ {
+  def tilde: Parser[SemverAST] = TILDE ~ rep(WHITESPACE) ~ partial ^^ {
     case _ ~ partial => TildeRange(partial)
   }
 
-  def caret: Parser[SemverAST] = CARET ~ partial ^^ {
+  def caret: Parser[SemverAST] = CARET ~ rep(WHITESPACE) ~ partial ^^ {
     case _ ~ partial => CaretRange(partial)
   }
 
