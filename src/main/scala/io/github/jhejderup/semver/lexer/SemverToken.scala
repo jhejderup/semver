@@ -4,38 +4,68 @@ import scala.util.parsing.input.Positional
 
 sealed trait SemverToken extends Positional
 
-case class NUMBER(str: Int) extends SemverToken
+case class NUMBER(str: Int) extends SemverToken {
+  override def toString: String = s"$str"
+}
 
-case class PRERELEASEIDENTIFIER(str: String) extends SemverToken
+case class PREID(str: String) extends SemverToken {
+  override def toString: String = str
+}
 
-case class WHITESPACE() extends SemverToken
+case object WHITESPACE extends SemverToken
 
-case class ORSIGN() extends SemverToken
+case object UNION extends SemverToken {
+  override def toString: String = "||"
+}
 
-case class EMPTY() extends SemverToken
+case object EMPTY extends SemverToken {
+  override def toString: String = ""
+}
 
-case class DOT() extends SemverToken
+case object DOT extends SemverToken {
+  override def toString: String = "."
+}
 
-case class LOWERCASEX() extends SemverToken
+case object LETTERX extends SemverToken {
+  override def toString: String = "x"
+}
 
-case class UPPERCASEX() extends SemverToken
+case object STAR extends SemverToken {
+  override def toString: String = "*"
+}
 
-case class STAR() extends SemverToken
+case object TILDE extends SemverToken {
+  override def toString: String = "~"
+}
 
-case class TILDE() extends SemverToken
+case object CARET extends SemverToken {
+  override def toString: String = "^"
+}
 
-case class CARET() extends SemverToken
+case object MINUS extends SemverToken {
+  override def toString: String = "-"
+}
 
-case class MINUS() extends SemverToken
+case object PLUS extends SemverToken {
+  override def toString: String = "+"
+}
 
-case class PLUS() extends SemverToken
+case object LT extends SemverToken {
+  override def toString: String = "<"
+}
 
-case class LESSTHAN() extends SemverToken
+case object GT extends SemverToken {
+  override def toString: String = ">"
+}
 
-case class GREATERTHAN() extends SemverToken
+case object GTE extends SemverToken {
+  override def toString: String = ">="
+}
 
-case class GREATERTHANEQUALS() extends SemverToken
+case object LTE extends SemverToken {
+  override def toString: String = "<="
+}
 
-case class LESSTHANEQUALS() extends SemverToken
-
-case class EQUALS() extends SemverToken
+case object EQU extends SemverToken {
+  override def toString: String = "="
+}

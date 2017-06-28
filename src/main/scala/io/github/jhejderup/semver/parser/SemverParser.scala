@@ -35,63 +35,64 @@ object SemverParser extends Parsers {
 
 
   def semverRange: Parser[SemverAST] = {
-    val logicalOr = rep(WHITESPACE()) ~ ORSIGN() ~ rep(WHITESPACE())
+    val logicalOr = rep(WHITESPACE) ~ UNION ~ rep(WHITESPACE)
     range ~ rep(logicalOr ~ range) ^^ {
-      case range ~ List() => SemverRange(range)
-      case range ~ rangeSet =>  SemverRange(Or(range :: rangeSet.map(_._2)))
+      case range ~ List() => range
+      case range ~ rangeSet =>  Union(range :: rangeSet.map(_._2))
     }
   }
 
-  def range: Parser[SemverAST] = hyphen | simple ~ rep(WHITESPACE() ~ simple) ^^ {
+  def range: Parser[SemverAST] = hyphen | simple ~ rep(WHITESPACE ~ simple) ^^ {
     case r ~ List() => r
-    case r ~ rSet => And(r :: rSet.map(_._2))
+    case r ~ rSet => Intersection(r :: rSet.map(_._2))
   } | empty
 
 
-  def empty: Parser[SemverAST] = EMPTY() ^^^ SemverID(STAR())
+  def empty: Parser[SemverAST] = EMPTY ^^^ Semver(STAR, STAR, STAR)
   def simple: Parser[SemverAST] =  primitive | partial | tilde | caret
 
 
-  def hyphen: Parser[SemverAST] = partial ~ WHITESPACE() ~ MINUS() ~ WHITESPACE() ~ partial ^^ {
-    case lhs ~ WHITESPACE() ~ MINUS() ~ WHITESPACE() ~ rhs => HyphenRange(lhs, rhs)
+  def hyphen: Parser[SemverAST] = partial ~ WHITESPACE ~ MINUS ~ WHITESPACE ~ partial ^^ {
+    case lhs ~ WHITESPACE ~ MINUS ~ WHITESPACE ~ rhs => HyphenRange(lhs, rhs)
   }
 
-  def primitive: Parser[SemverAST] = (GREATERTHANEQUALS() | LESSTHANEQUALS() |
-    GREATERTHAN() | LESSTHAN() | EQUALS()) ~ partial ^^ {
+  def primitive: Parser[SemverAST] = (GTE | LTE | GT | LT | EQU) ~ partial ^^ {
     case op ~ partial => CompareRange(op, partial)
   }
 
-  def tilde: Parser[SemverAST] = TILDE() ~ partial ^^ {
+  def tilde: Parser[SemverAST] = TILDE ~ partial ^^ {
     case _ ~ partial => TildeRange(partial)
   }
 
-  def caret: Parser[SemverAST] = CARET() ~ partial ^^ {
+  def caret: Parser[SemverAST] = CARET ~ partial ^^ {
     case _ ~ partial => CaretRange(partial)
   }
 
-  def partial: Parser[SemverID] = xr ~ opt(DOT() ~ xr ~ opt(DOT() ~ xr ~ opt(qualifier))) ^^ {
-    case major ~ None => SemverID(major)
-    case major ~ Some(DOT() ~ minor ~ None) => SemverID(major, Some(minor))
-    case major ~ Some(DOT() ~ minor ~ Some(DOT() ~ patch ~ Some(PreReleaseTags(None,None))))
-    => SemverID(major, Some(minor), Some(patch))
-    case major ~ Some(DOT() ~ minor ~ Some(DOT() ~ patch ~ Some(PreReleaseTags(pre,None))))
-    => SemverID(major, Some(minor), Some(patch), pre)
-    case major ~ Some(DOT() ~ minor ~ Some(DOT() ~ patch ~ Some(PreReleaseTags(None, build))))
-    => SemverID(major, Some(minor), Some(patch), None , build)
-    case major ~ Some(DOT() ~ minor ~ Some(DOT() ~ patch ~ Some(PreReleaseTags(pre, build))))
-    => SemverID(major, Some(minor), Some(patch), pre , build)
+
+  //Any of X, x, or * may be used to "stand in" for one of the numeric values in the [major, minor, patch] tuple.
+  def partial: Parser[Semver] = xr ~ opt(DOT ~ xr ~ opt(DOT ~ xr ~ opt(qualifier))) ^^ {
+    case major ~ None => Semver(major, LETTERX, LETTERX)
+    case major ~ Some(DOT ~ minor ~ None) => Semver(major, minor, LETTERX)
+    case major ~ Some(DOT ~ minor ~ Some(DOT ~ patch ~ Some(PreReleaseTags(None,None))))
+    => Semver(major, minor, patch)
+    case major ~ Some(DOT ~ minor ~ Some(DOT ~ patch ~ Some(PreReleaseTags(pre,None))))
+    => Semver(major, minor, patch, pre)
+    case major ~ Some(DOT ~ minor ~ Some(DOT ~ patch ~ Some(PreReleaseTags(None, build))))
+    => Semver(major, minor, patch, None , build)
+    case major ~ Some(DOT ~ minor ~ Some(DOT ~ patch ~ Some(PreReleaseTags(pre, build))))
+    => Semver(major, minor, patch, pre , build)
 
   }
 
   def nr: Parser[SemverToken] = number
 
-  def xr: Parser[SemverToken] = LOWERCASEX() | UPPERCASEX() | STAR() | nr
+  def xr: Parser[SemverToken] = LETTERX | STAR | nr
 
-  def qualifier: Parser[PreReleaseTags] = opt(MINUS() ~ pre) ~ opt(PLUS() ~ build)  ^^ {
+  def qualifier: Parser[PreReleaseTags] = opt(MINUS ~ pre) ~ opt(PLUS ~ build)  ^^ {
     case None ~ None => PreReleaseTags()
-    case Some(MINUS() ~ pre) ~ None => PreReleaseTags(Some(pre))
-    case None ~ Some(PLUS() ~ build) => PreReleaseTags(None, Some(build))
-    case Some(MINUS() ~ pre) ~ Some(PLUS() ~ build)  => PreReleaseTags(Some(pre), Some(build))
+    case Some(MINUS ~ pre) ~ None => PreReleaseTags(Some(pre))
+    case None ~ Some(PLUS ~ build) => PreReleaseTags(None, Some(build))
+    case Some(MINUS ~ pre) ~ Some(PLUS ~ build)  => PreReleaseTags(Some(pre), Some(build))
 
   }
 
@@ -99,7 +100,7 @@ object SemverParser extends Parsers {
 
   def build: Parser[List[SemverToken]] = parts
 
-  def parts: Parser[List[SemverToken]] = part ~ rep(DOT() ~ part) ^^ {
+  def parts: Parser[List[SemverToken]] = part ~ rep(DOT ~ part) ^^ {
     case part ~ List() => part :: List[SemverToken]()
     case part ~ parts => part :: parts.map(_._2)
   }
@@ -112,8 +113,8 @@ object SemverParser extends Parsers {
   }
 
 
-  private def identifier: Parser[PRERELEASEIDENTIFIER] = positioned {
-    accept("identifier", { case id@PRERELEASEIDENTIFIER(str) => id })
+  private def identifier: Parser[PREID] = positioned {
+    accept("identifier", { case id@PREID(str) => id })
   }
 
 }

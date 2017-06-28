@@ -20,80 +20,80 @@ object SemverLexer extends RegexParsers {
 
   def tokens: Parser[List[SemverToken]] = {
     phrase(rep(lessthanequals | greaterthanequals | greaterthan | lessthan | equals | lowercasex
-      | uppercasex | star | tilde | caret | plus | minus | or | dot | number | prereleaseidentifier
+      | uppercasex | star | tilde | caret | plus | minus | union | dot | number | prereleaseidentifier
       | whitepace)) ^^ { rawTokens => postprocess(rawTokens)
     }
   }
 
   private def postprocess(tokens: List[SemverToken]): List[SemverToken] =
-    if (tokens.size > 0) tokens else EMPTY() :: tokens
+    if (tokens.size > 0) tokens else EMPTY :: tokens
 
 
   def number: Parser[NUMBER] = {
     """(0|[1-9]\d*)""".r ^^ { str => NUMBER(str.toInt) }
   }
 
-  def prereleaseidentifier: Parser[PRERELEASEIDENTIFIER] = {
-    """[-0-9A-Za-z]+""".r ^^ { str => PRERELEASEIDENTIFIER(str) }
+  def prereleaseidentifier: Parser[PREID] = {
+    """[-0-9A-Za-z]+""".r ^^ { str => PREID(str) }
   }
 
   def whitepace = positioned {
-    " " ^^^ WHITESPACE()
+    " " ^^^ WHITESPACE
   }
 
-  def or = positioned {
-    "||" ^^^ ORSIGN()
+  def union = positioned {
+    "||" ^^^ UNION
   }
 
   def lessthan = positioned {
-    "<" ^^^ LESSTHAN()
+    "<" ^^^ LT
   }
 
   def greaterthan = positioned {
-    ">" ^^^ GREATERTHAN()
+    ">" ^^^ GT
   }
 
   def greaterthanequals = positioned {
-    ">=" ^^^ GREATERTHANEQUALS()
+    ">=" ^^^ GTE
   }
 
   def lessthanequals = positioned {
-    "<=" ^^^ LESSTHANEQUALS()
+    "<=" ^^^ LTE
   }
 
   def equals = positioned {
-    "=" ^^^ EQUALS()
+    "=" ^^^ EQU
   }
 
   def dot = positioned {
-    "." ^^^ DOT()
+    "." ^^^ DOT
   }
 
   def lowercasex = positioned {
-    "x" ^^^ LOWERCASEX()
+    "x" ^^^ LETTERX
   }
 
   def uppercasex = positioned {
-    "X" ^^^ UPPERCASEX()
+    "X" ^^^ LETTERX
   }
 
   def star = positioned {
-    "*" ^^^ STAR()
+    "*" ^^^ STAR
   }
 
   def tilde = positioned {
-    "~" ^^^ TILDE()
+    "~" ^^^ TILDE
   }
 
   def caret = positioned {
-    "^" ^^^ CARET()
+    "^" ^^^ CARET
   }
 
   def minus = positioned {
-    "-" ^^^ MINUS()
+    "-" ^^^ MINUS
   } //same as hyphen
   def plus = positioned {
-    "+" ^^^ PLUS()
+    "+" ^^^ PLUS
   }
 
 
