@@ -56,8 +56,8 @@ object SemverParser extends Parsers {
     case lhs ~ WHITESPACE ~ MINUS ~ WHITESPACE ~ rhs => HyphenRange(lhs, rhs)
   }
 
-  def primitive: Parser[SemverAST] = (GTE | LTE | GT | LT | EQU) ~ partial ^^ {
-    case op ~ partial => CompareRange(op, partial)
+  def primitive: Parser[SemverAST] = (GTE | LTE | GT | LT | EQU) ~ rep(WHITESPACE) ~ partial ^^ {
+    case op ~ _ ~ partial => CompareRange(op, partial)
   }
 
   def tilde: Parser[SemverAST] = TILDE ~ partial ^^ {

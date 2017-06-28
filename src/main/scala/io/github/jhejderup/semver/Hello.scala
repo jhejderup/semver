@@ -5,7 +5,7 @@ import io.github.jhejderup.semver.lexer.{NUMBER, PREID}
 import io.github.jhejderup.semver.parser.Semver
 
 object Hello extends App {
-  val ast = SemverRangeCompiler("||")
+  val ast = SemverRangeCompiler("<  2.0.0")
   println(ast)
 //  println(ast.right.get)
 //  println(ast.right.get.transform())
