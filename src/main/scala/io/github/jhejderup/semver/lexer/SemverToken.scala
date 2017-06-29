@@ -10,6 +10,11 @@ case class NUMBER(str: Int) extends SemverToken {
 
 case class PREID(str: String) extends SemverToken {
   override def toString: String = str
+
+  override def equals(that: scala.Any): Boolean = that match {
+    case that: PREID => this.toString.equals(that.toString)
+    case _ => false
+  }
 }
 
 case object WHITESPACE extends SemverToken

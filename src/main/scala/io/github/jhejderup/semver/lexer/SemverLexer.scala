@@ -7,7 +7,7 @@ import scala.util.parsing.combinator.RegexParsers
 
 object SemverLexer extends RegexParsers {
   override def skipWhitespace = false
-  override protected val whiteSpace = """[ \t]""".r
+  override protected val whiteSpace = """( |\\t|\t)""".r
 
   def apply(code: String): Either[SemverLexerError, List[SemverToken]] = {
 

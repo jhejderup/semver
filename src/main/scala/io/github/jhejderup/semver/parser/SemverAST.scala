@@ -18,6 +18,12 @@ case class Semver(major: SemverToken,
     extends SemverAST
     with Ordered[Semver] {
 
+
+  override def equals(that: Any): Boolean = that match {
+    case that: Semver => that.compare(this) == 0
+    case _ => false
+  }
+
   override def transform(): SemverAST = this match {
     case Semver(NUMBER(major), NUMBER(minor), LETTERX | STAR, pre, build) =>
       Intersection(
@@ -76,7 +82,9 @@ case class Semver(major: SemverToken,
               res = 1
             } else if (thisPre.isDefined && !thatPre.isDefined) {
               res = -1
-            } else {
+            } else if (!thisPre.isDefined && !thatPre.isDefined) {
+              res = 0
+            }else {
               val thisPreList = thisPre.get
               val thatPreList = thatPre.get
               if (thisPreList.size == thatPreList.size) {
@@ -108,7 +116,7 @@ case class Semver(major: SemverToken,
                   .find(_ != 0)
                   .toList
                   .headOption
-                  .getOrElse(-1)
+                  .getOrElse(1)
 
               } else {
                 res = thisPreList
@@ -123,7 +131,7 @@ case class Semver(major: SemverToken,
                   .find(_ != 0)
                   .toList
                   .headOption
-                  .getOrElse(1)
+                  .getOrElse(-1)
               }
             }
           }

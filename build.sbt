@@ -10,5 +10,6 @@ lazy val root = (project in file(".")).
     name := "semver",
     libraryDependencies ++= Seq(
       scalaTest % Test,
-      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6")
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+    )
   )

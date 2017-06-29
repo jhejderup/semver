@@ -48,7 +48,7 @@ object SemverParser extends Parsers {
   } | empty
 
 
-  def empty: Parser[SemverAST] = EMPTY ^^^ Semver(STAR, STAR, STAR)
+  def empty: Parser[SemverAST] = (EMPTY | UNION) ^^^ Semver(STAR, STAR, STAR)
   def simple: Parser[SemverAST] =  primitive | partial | tilde | caret
 
 
@@ -60,7 +60,7 @@ object SemverParser extends Parsers {
     case op ~ _ ~ partial => CompareRange(op, partial)
   }
 
-  def tilde: Parser[SemverAST] = TILDE ~ rep(WHITESPACE) ~ partial ^^ {
+  def tilde: Parser[SemverAST] = TILDE ~ rep(WHITESPACE)  ~ partial ^^ {
     case _ ~ partial => TildeRange(partial)
   }
 
@@ -70,7 +70,7 @@ object SemverParser extends Parsers {
 
 
   //Any of X, x, or * may be used to "stand in" for one of the numeric values in the [major, minor, patch] tuple.
-  def partial: Parser[Semver] = xr ~ opt(DOT ~ xr ~ opt(DOT ~ xr ~ opt(qualifier))) ^^ {
+  def partial: Parser[Semver] = (rep(WHITESPACE) ~ (EQU.? | PREID("v").?) ~ rep(WHITESPACE)) ~> xr ~ opt(DOT ~ xr ~ opt(DOT ~ xr ~ opt(qualifier))) ^^ {
     case major ~ None => Semver(major, LETTERX, LETTERX)
     case major ~ Some(DOT ~ minor ~ None) => Semver(major, minor, LETTERX)
     case major ~ Some(DOT ~ minor ~ Some(DOT ~ patch ~ Some(PreReleaseTags(None,None))))
@@ -87,7 +87,7 @@ object SemverParser extends Parsers {
 
   def nr: Parser[SemverToken] = number
 
-  def xr: Parser[SemverToken] = LETTERX | STAR | nr
+  def xr: Parser[SemverToken] = cleannumber |LETTERX | STAR | nr
 
   def qualifier: Parser[PreReleaseTags] = opt(MINUS ~ pre) ~ opt(PLUS ~ build)  ^^ {
     case None ~ None => PreReleaseTags()
@@ -108,9 +108,9 @@ object SemverParser extends Parsers {
   }
 
   def dashpart: Parser[SemverToken] = (nr ~ MINUS | MINUS) ~ rep(part| MINUS) ^^ {
-    case num ~ MINUS ~ List() => PREID(num.toString + "-")
+    case num ~ MINUS ~ List() => PREID(num.toString + MINUS)
     case num ~ List() => PREID(num.toString)
-    case num ~ MINUS ~ parts => PREID(num.toString + "-" + parts.mkString(""))
+    case num ~ MINUS ~ parts => PREID(num.toString + MINUS + parts.mkString(""))
     case num ~ parts => PREID(num.toString + parts.mkString(""))
   }
 
@@ -125,6 +125,11 @@ object SemverParser extends Parsers {
 
   private def identifier: Parser[PREID] = positioned {
     accept("identifier", { case id@PREID(str) => id })
+  }
+
+
+  private def cleannumber: Parser[NUMBER] = positioned {
+    accept("identifier", { case PREID(str) => NUMBER(str.replaceAll("^[=v]+","").toInt)})
   }
 
 }

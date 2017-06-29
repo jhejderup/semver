@@ -5,10 +5,13 @@ import io.github.jhejderup.semver.lexer.{NUMBER, PREID}
 import io.github.jhejderup.semver.parser.Semver
 
 object Hello extends App {
- // val ast = SemverRangeCompiler("1.2.3-4-b-.4-.-.-ab-.456-bs-.----.hello.yes.123")
-  val ast = SemverRangeCompiler("1.2.3-4-")
-  println(ast)
-  println(ast.right.get)
-  println(ast.right.get.transform())
- // println(ast.right.get.transform().evaluate(Semver(NUMBER(1), NUMBER(2), NUMBER(3),Some(List(PREID("pre"), NUMBER(2), NUMBER(2))))))
+
+
+  val range = SemverRangeCompiler("<1.2.3").right.get.transform()
+  val ver = SemverRangeCompiler("1.2.3").right.get
+    .asInstanceOf[Semver]
+
+
+  println(range.evaluate(ver))
+
 }
