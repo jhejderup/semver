@@ -84,6 +84,7 @@ object SemverParser extends Parsers {
 
   }
 
+
   def nr: Parser[SemverToken] = number
 
   def xr: Parser[SemverToken] = LETTERX | STAR | nr
@@ -100,12 +101,21 @@ object SemverParser extends Parsers {
 
   def build: Parser[List[SemverToken]] = parts
 
-  def parts: Parser[List[SemverToken]] = part ~ rep(DOT ~ part) ^^ {
+
+  def parts: Parser[List[SemverToken]] = (dashpart | part) ~ rep(DOT ~ (dashpart | part)) ^^ {
     case part ~ List() => part :: List[SemverToken]()
     case part ~ parts => part :: parts.map(_._2)
   }
 
-  def part: Parser[SemverToken] = nr | identifier
+  def dashpart: Parser[SemverToken] = (nr ~ MINUS | MINUS) ~ rep(part| MINUS) ^^ {
+    case num ~ MINUS ~ List() => PREID(num.toString + "-")
+    case num ~ List() => PREID(num.toString)
+    case num ~ MINUS ~ parts => PREID(num.toString + "-" + parts.mkString(""))
+    case num ~ parts => PREID(num.toString + parts.mkString(""))
+  }
+
+
+  def part: Parser[SemverToken] =   nr | identifier
 
 
   private def number: Parser[NUMBER] = positioned {

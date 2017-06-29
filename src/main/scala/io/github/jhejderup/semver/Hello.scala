@@ -5,7 +5,8 @@ import io.github.jhejderup.semver.lexer.{NUMBER, PREID}
 import io.github.jhejderup.semver.parser.Semver
 
 object Hello extends App {
-  val ast = SemverRangeCompiler(">=1.0.0")
+ // val ast = SemverRangeCompiler("1.2.3-4-b-.4-.-.-ab-.456-bs-.----.hello.yes.123")
+  val ast = SemverRangeCompiler("1.2.3-4-")
   println(ast)
   println(ast.right.get)
   println(ast.right.get.transform())

@@ -10,19 +10,21 @@ object SemverLexer extends RegexParsers {
   override protected val whiteSpace = """[ \t]""".r
 
   def apply(code: String): Either[SemverLexerError, List[SemverToken]] = {
-    parse(tokens, code) match {
-      case NoSuccess(msg, next) => Left(SemverLexerError(Location(next.pos.line, next.pos.column), msg))
-      case Success(result, next) => Right(result)
-    }
+
+      parse(tokens, code) match {
+        case NoSuccess(msg, next) => Left(SemverLexerError(Location(next.pos.line, next.pos.column), msg))
+        case Success(result, next) => Right(result)
+      }
   }
 
 
   def tokens: Parser[List[SemverToken]] = {
     phrase(rep(lessthanequals | greaterthanequals | greaterthan | lessthan | equals | lowercasex
-      | uppercasex | star | tilde | caret | plus | minus | union | dot | number | prereleaseidentifier
-      | whitepace)) ^^ { rawTokens => postprocess(rawTokens)
+      | uppercasex | star | tilde | caret | plus | union | number
+      | dot | minus | prereleaseidentifier |  whitepace)) ^^ { rawTokens => postprocess(rawTokens)
     }
   }
+
 
   private def postprocess(tokens: List[SemverToken]): List[SemverToken] =
     if (tokens.size > 0) tokens else EMPTY :: tokens

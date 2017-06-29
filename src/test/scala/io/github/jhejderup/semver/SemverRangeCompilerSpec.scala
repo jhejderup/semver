@@ -1,16 +1,17 @@
 package io.github.jhejderup.semver.compiler
 
+import io.github.jhejderup.semver.parser.Semver
 import org.scalatest._
 
 class SemverRangeCompilerSpec extends FlatSpec with Matchers {
-  "The SemverRangeCompiler object" should "equal true" in {
+  "The SemverRangeCompiler transform method" should "equal true" in {
     //https://github.com/npm/node-semver/blob/master/test/index.js#L459
     val validRangeTest = List[(String, String)](
       ("1.0.0 - 2.0.0", ">=1.0.0 <=2.0.0"),
       ("1.0.0", "1.0.0"),
       (">=*", ">=0.0.0"), // (">=*", "*"), // we evaluate any op + * as * e.g <* := * https://github.com/npm/node-semver/blob/d21444a0658224b152ce54965d02dbe0856afb84/semver.js#L225
-      ("", ">=0.0.0"),    //  ("", "*"),
-      ("*", ">=0.0.0"),          // ("*", "*"),
+      ("", ">=0.0.0"), //  ("", "*"),
+      ("*", ">=0.0.0"), // ("*", "*"),
 //      ("*", "*"),      //duplicate!!
       (">=1.0.0", ">=1.0.0"),
       (">1.0.0", ">1.0.0"),
@@ -41,7 +42,7 @@ class SemverRangeCompilerSpec extends FlatSpec with Matchers {
       ("1.2.x", ">=1.2.0 <1.3.0"),
       ("1.2.x || 2.x", ">=1.2.0 <1.3.0||>=2.0.0 <3.0.0"),
       ("1.2.x || 2.x", ">=1.2.0 <1.3.0||>=2.0.0 <3.0.0"),
-      ("x", ">=0.0.0"),  //      ("x", "*"),
+      ("x", ">=0.0.0"), //      ("x", "*"),
       ("2.*.*", ">=2.0.0 <3.0.0"),
       ("1.2.*", ">=1.2.0 <1.3.0"),
       ("1.2.* || 2.*", ">=1.2.0 <1.3.0||>=2.0.0 <3.0.0"),
@@ -73,17 +74,68 @@ class SemverRangeCompilerSpec extends FlatSpec with Matchers {
       ("<1.2", "<1.2.0"),
       ("< 1.2", "<1.2.0"),
       ("1", ">=1.0.0 <2.0.0"),
-//    //  (">01.02.03", ">1.2.3", true),  --- this for loose case, not supported yet
+//    //  (">01.02.03", ">1.2.3"/*, true*/),  --- this for loose case, not supported yet
 //    //  (">01.02.03", null),  --- this for loose case, not supported yet
-//      ("~1.2.3beta", ">=1.2.3-beta <1.3.0", true), --- this for loose case, not supported yet
+//      ("~1.2.3beta", ">=1.2.3-beta <1.3.0"/*, true*/), --- this for loose case, not supported yet
 //    //  ("~1.2.3beta", null),  --- this for loose case, not supported yet
       ("^ 1.2 ^ 1", ">=1.2.0 <2.0.0 >=1.0.0 <2.0.0")
     )
 
-
     for {
       range <- validRangeTest
-    } yield SemverRangeCompiler(range._1).right.get.transform().toString should equal(range._2)
+    } yield
+      SemverRangeCompiler(range._1).right.get
+        .transform()
+        .toString should equal(range._2)
 
   }
+
+  "The Semver object comparison" should "equal true" in {
+
+    // version1 should be greater than version2
+    val comparisonTest = List[(String, String)](
+      ("0.0.0", "0.0.0-foo"),
+      ("0.0.1", "0.0.0"),
+      ("1.0.0", "0.9.9"),
+      ("0.10.0", "0.9.0"),
+      ("0.99.0", "0.10.0"),
+      ("2.0.0", "1.2.3"),
+      ("v0.0.0", "0.0.0-foo" /*, true*/ ),
+      ("v0.0.1", "0.0.0" /*, true*/ ),
+      ("v1.0.0", "0.9.9" /*, true*/ ),
+      ("v0.10.0", "0.9.0" /*, true*/ ),
+      ("v0.99.0", "0.10.0" /*, true*/ ),
+      ("v2.0.0", "1.2.3" /*, true*/ ),
+      ("0.0.0", "v0.0.0-foo" /*, true*/ ),
+      ("0.0.1", "v0.0.0" /*, true*/ ),
+      ("1.0.0", "v0.9.9" /*, true*/ ),
+      ("0.10.0", "v0.9.0" /*, true*/ ),
+      ("0.99.0", "v0.10.0" /*, true*/ ),
+      ("2.0.0", "v1.2.3" /*, true*/ ),
+      ("1.2.3", "1.2.3-asdf"),
+      ("1.2.3", "1.2.3-4"),
+       ("1.2.3", "1.2.3-4-foo"),
+       ("1.2.3-5-foo", "1.2.3-5"), 
+      ("1.2.3-5", "1.2.3-4"),
+        ("1.2.3-5-foo", "1.2.3-5-Foo"),
+      ("3.0.0", "2.7.2+asdf"),
+      ("1.2.3-a.10", "1.2.3-a.5"),
+      ("1.2.3-a.b", "1.2.3-a.5"),
+      ("1.2.3-a.b", "1.2.3-a"),
+      ("1.2.3-a.b.c.10.d.5", "1.2.3-a.b.c.5.d.100"),
+      ("1.2.3-r2", "1.2.3-r100"),
+      ("1.2.3-r100", "1.2.3-R2")
+    )
+
+    for {
+      cmp <- comparisonTest
+    } yield {
+      val res = SemverRangeCompiler(cmp._1).right.get
+        .asInstanceOf[Semver] > SemverRangeCompiler(cmp._2).right.get
+        .asInstanceOf[Semver]
+      res equals (true)
+
+    }
+  }
+
 }
